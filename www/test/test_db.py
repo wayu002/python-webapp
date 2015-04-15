@@ -12,10 +12,14 @@ class TestDB(unittest.TestCase):
 
     def setUp(self):
         db.create_engine('wangyu', 'taotao', 'python_blog')
+        db.update('drop table if exists user')
+        db.update('create table user (id int primary key, name text,' +
+                  'email text, password text, last_modified real)')
         db.update('delete from user')
 
     def tearDown(self):
         db.update('delete from user')
+        db.update('drop table if exists user')
         db.engine = None
 
     # test insert

@@ -2,7 +2,6 @@
 # !/usr/bin/python
 
 import logging
-import pdb
 from www import db
 
 class Field(object):
@@ -117,8 +116,6 @@ class ModelMetaclass(type):
     def __new__(cls, name, bases, attrs):
         if name == 'Model':
             return type.__new__(cls, name, bases, attrs)
-
-        pdb.set_trace()
 
         if not hasattr(cls, 'subclasses'):
             cls.subclasses = {}
