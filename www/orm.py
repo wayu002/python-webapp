@@ -2,6 +2,7 @@
 # !/usr/bin/python
 
 import logging
+import pdb
 from www import db
 
 class Field(object):
@@ -48,7 +49,7 @@ class IntegerField(Field):
             kw['default'] = 0
         if not 'ddl' in kw:
             kw['ddl'] = 'bigint'
-        super(IntegerField, self).__inti__(**kw)
+        super(IntegerField, self).__init__(**kw)
 
 
 class FloatField(Field):
@@ -116,6 +117,8 @@ class ModelMetaclass(type):
     def __new__(cls, name, bases, attrs):
         if name == 'Model':
             return type.__new__(cls, name, bases, attrs)
+
+        pdb.set_trace()
 
         if not hasattr(cls, 'subclasses'):
             cls.subclasses = {}
@@ -250,7 +253,20 @@ class Model(dict):
         db.insert('%s' % self.__table__, **params)
         return self
 
+class User(Model):
+    id = IntegerField(primary_key = True)
+    name = TextField()
+    email = TextField()
+    password = TextField(default=lambda: '******')
+    last_modified = FloatField()
+    def pre_insert(self):
+        import time
+        self.last_modified = time.time()
+
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
-
+    db.create_engine('wangyu', 'taotao', 'python_blog')
+    db.update('drop table if exists user')
+    db.update('create table user (id int primary key, name text,' +
+                  'email text, password text, last_modified real)')
 
