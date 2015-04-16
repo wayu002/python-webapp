@@ -1,6 +1,7 @@
-€}q(Uwww]Uwww.test]Uwww.db]q(U
-select_intqUwith_transactionsqUDictqUselectqU
-select_oneqUcreate_engineqUwith_connectionq	UDBErrorq
-Unext_idqUengineqUupdateqUinsertqUtransactionqU
-connectionqUMultiColumnsErrorqeUshutilq]q(UcopyfileqUignore_patternsqUcopytreeqUget_archive_formatsqUcopyfileobjqUregister_archive_formatqUcopymodeqUmake_archiveqUmoveqUunregister_archive_formatqUrmtreeqUErrorqUcopyq U	ExecErrorq!Ucopy2q"USpecialFileErrorq#Ucopystatq$UWindowsErrorq%eUosq&]q'(Upopen4q(Uexecleq)Upopen3q*USEEK_CURq+Uspawnlpq,Uexeclpq-Uenvironq.Uspawnvpq/Uspawnlq0Uexecvpq1Umakedirsq2Ulinesepq3UP_WAITq4Uspawnvq5Uspawnveq6Uexecvpeq7Uunsetenvq8USEEK_SETq9Ugetenvq:Upopen2q;Uwalkq<Uspawnleq=Uexeclq>Unameq?USEEK_ENDq@UspawnlpeqAU	P_NOWAITOqBUP_NOWAITqCU
-removedirsqDUrenamesqEUspawnvpeqFUexeclpeqGeUwww.test.test_db]qHUTestDBqIau.
+€}q(Uwww]U	www.model]q(UCommentqUBlogqUUserqeUwww.test.test_model]qU	TestModelqaUwww.test]Uwww.db]q(U
+select_intq	Uwith_transactionsq
+UDictqUselectqU
+select_oneqUcreate_engineqUwith_connectionqUDBErrorqUnext_idqUengineqUupdateqUinsertqUtransactionqU
+connectionqUMultiColumnsErrorqeUwww.orm]q(U	BlobFieldqUIntegerFieldqUVersionFieldqUStringFieldqU
+FloatFieldqUFieldqUModelMetaclassqU	TextFieldq UBooleanFieldq!UModelq"eUwww.test.test_orm]q#(UTestORMq$heUshutil]q%(Ucopyfileq&Uignore_patternsq'Ucopytreeq(Uget_archive_formatsq)Ucopyfileobjq*Uregister_archive_formatq+Ucopymodeq,Umake_archiveq-Umoveq.Uunregister_archive_formatq/Urmtreeq0UErrorq1Ucopyq2U	ExecErrorq3Ucopy2q4USpecialFileErrorq5Ucopystatq6UWindowsErrorq7eUos]q8(Upopen4q9Uexecleq:Upopen3q;USEEK_CURq<Uspawnlpq=Uexeclpq>Uenvironq?Uspawnvpq@UspawnlqAUexecvpqBUmakedirsqCUlinesepqDUP_WAITqEUspawnvqFUspawnveqGUexecvpeqHUunsetenvqIUSEEK_SETqJUgetenvqKUpopen2qLUwalkqMUspawnleqNUexeclqOUnameqPUSEEK_ENDqQUspawnlpeqRU	P_NOWAITOqSUP_NOWAITqTU
+removedirsqUUrenamesqVUspawnvpeqWUexeclpeqXeUwww.test.test_db]qYUTestDBqZau.

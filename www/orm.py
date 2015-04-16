@@ -250,15 +250,6 @@ class Model(dict):
         db.insert('%s' % self.__table__, **params)
         return self
 
-class User(Model):
-    id = IntegerField(primary_key = True)
-    name = TextField()
-    email = TextField()
-    password = TextField(default=lambda: '******')
-    last_modified = FloatField()
-    def pre_insert(self):
-        import time
-        self.last_modified = time.time()
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
