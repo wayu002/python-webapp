@@ -1,7 +1,7 @@
-€}q(Uwww]U	www.model]q(UCommentqUBlogqUUserqeUwww.test.test_model]qU	TestModelqaUwww.test]Uwww.db]q(U
-select_intq	Uwith_transactionsq
-UDictqUselectqU
-select_oneqUcreate_engineqUwith_connectionqUDBErrorqUnext_idqUengineqUupdateqUinsertqUtransactionqU
-connectionqUMultiColumnsErrorqeUwww.sql_gen]q(USqlGeneratorqULUsgenqeUwww.orm]q(U	BlobFieldqUIntegerFieldqUVersionFieldqUStringFieldqU
-FloatFieldq UFieldq!UModelMetaclassq"U	TextFieldq#UBooleanFieldq$UModelq%eUwww.test.test_orm]q&(UTestORMq'heUshutil]q((Ucopyfileq)Uignore_patternsq*Ucopytreeq+Uget_archive_formatsq,Ucopyfileobjq-Uregister_archive_formatq.Ucopymodeq/Umake_archiveq0Umoveq1Uunregister_archive_formatq2Urmtreeq3UErrorq4Ucopyq5U	ExecErrorq6Ucopy2q7USpecialFileErrorq8Ucopystatq9UWindowsErrorq:eUos]q;(Upopen4q<Uexecleq=Upopen3q>USEEK_CURq?Uspawnlpq@UexeclpqAUenvironqBUspawnvpqCUspawnlqDUexecvpqEUmakedirsqFUlinesepqGUP_WAITqHUspawnvqIUspawnveqJUexecvpeqKUunsetenvqLUSEEK_SETqMUgetenvqNUpopen2qOUwalkqPUspawnleqQUexeclqRUnameqSUSEEK_ENDqTUspawnlpeqUU	P_NOWAITOqVUP_NOWAITqWU
-removedirsqXUrenamesqYUspawnvpeqZUexeclpeq[eUwww.test.test_db]q\UTestDBq]au.
+€}q(Uwww]U	www.model]q(UCommentqUBlogqUUserqeUwww.test.test_model]qU	TestModelqaUwww.test]Uwww.log]qULogq	aUwww.db]q
+(U
+select_intqUwith_transactionsqUDictqUselectqU
+select_oneqUcreate_engineqUwith_connectionqUDBErrorqUnext_idqUengineqUupdateqUinsertqUtransactionqU
+connectionqUMultiColumnsErrorqeUwww.sql_gen]q(USqlGeneratorqULUsgenqeUwww.orm]q(U	BlobFieldqUIntegerFieldqUVersionFieldq UStringFieldq!U
+FloatFieldq"UFieldq#UModelMetaclassq$U	TextFieldq%UBooleanFieldq&UModelq'eUwww.test.test_orm]q((UTestORMq)heUshutil]q*(Ucopyfileq+Uignore_patternsq,Ucopytreeq-Uget_archive_formatsq.Ucopyfileobjq/Uregister_archive_formatq0Ucopymodeq1Umake_archiveq2Umoveq3Uunregister_archive_formatq4Urmtreeq5UErrorq6Ucopyq7U	ExecErrorq8Ucopy2q9USpecialFileErrorq:Ucopystatq;UWindowsErrorq<eUos]q=(Upopen4q>Uexecleq?Upopen3q@USEEK_CURqAUspawnlpqBUexeclpqCUenvironqDUspawnvpqEUspawnlqFUexecvpqGUmakedirsqHUlinesepqIUP_WAITqJUspawnvqKUspawnveqLUexecvpeqMUunsetenvqNUSEEK_SETqOUgetenvqPUpopen2qQUwalkqRUspawnleqSUexeclqTUnameqUUSEEK_ENDqVUspawnlpeqWU	P_NOWAITOqXUP_NOWAITqYU
+removedirsqZUrenamesq[Uspawnvpeq\Uexeclpeq]eUwww.test_log]q^UlaUwww.test.test_db]q_UTestDBq`au.
