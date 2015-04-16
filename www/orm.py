@@ -15,7 +15,8 @@ class Field(object):
         self.updatable = kw.get('updatable', True)
         self.insertable = kw.get('insertable', True)
         self.ddl = kw.get('ddl', '')
-        self._orer = Field._count
+        self._index = kw.get('index', False)
+        self._order = Field._count
         Field._count += 1
 
     @property
@@ -96,6 +97,7 @@ _triggers = frozenset(['pre_insert', 'pre_update', 'pre_delete'])
 
 def _gen_sql(table_name, mappings):
     pk = None
+    idx = None
     sql = ['-- generating SQL %s:' % table_name, 'create table `%s` ('
            % table_name]
     for f in sorted(mappings.values(), lambda x,y: cmp(x._order, y._order)):
@@ -105,10 +107,14 @@ def _gen_sql(table_name, mappings):
         nullable = f.nullable
         if f.primary_key:
             pk = f.name
+        if f._index:
+            idx = f.name
         sql.append(nullable and ' `%s` %s,' % (f.name,ddl) or
                    ' `%s` %s not null,' % (f.name, ddl))
+    if idx is not None:
+        sql.append(' key `idx_%s` (`%s`),' % (idx, idx))
     sql.append(' primary key(`%s`)' % pk)
-    sql.append(');')
+    sql.append(') engine=innodb default charset=utf8;')
     return '\n'.join(sql)
 
 
@@ -153,7 +159,7 @@ class ModelMetaclass(type):
             attrs['__table__'] = name.lower()
         attrs['__mappings__'] = mappings
         attrs['__primary_key__'] = primary_key
-        attrs['__sql__'] = lambda self: _gen_sql(attrs['__table__'], mappings)
+        attrs['__sql__'] = _gen_sql(attrs['__table__'], mappings)
         for trigger in _triggers:
             if not trigger in attrs:
                 attrs[trigger] = None
