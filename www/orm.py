@@ -1,8 +1,10 @@
 # coding:utf-8
 # !/usr/bin/python
 
-import logging
+from www.log import Log
 from www import db
+
+_log = Log(__name__)
 
 class Field(object):
     _count = 0
@@ -128,25 +130,25 @@ class ModelMetaclass(type):
         if not name in cls.subclasses:
             cls.subclasses[name] = name
         else:
-            logging.warning('Redefine class: %s' % name)
+            _log.warning('Redefine class: %s' % name)
 
-        logging.info('Scan ORMapping %s ...' % name)
+        _log.info('Scan ORMapping %s ...' % name)
         mappings = dict()
         primary_key = None
         for k, v in attrs.iteritems():
             if isinstance(v, Field):
                 if not v.name:
                     v.name = k
-                logging.info('Foud mapping %s ==> %s' % (k, v))
+                _log.info('Foud mapping %s ==> %s' % (k, v))
                 if v.primary_key:
                     if primary_key:
                         raise TypeError('Cannot define more than 1 primary ' +
                                         'key in class %s' % name)
                     if v.updatable:
-                        logging.warning('NOTE: change primary key to nonupdate')
+                        _log.warning('NOTE: change primary key to nonupdate')
                         v.updatable = False
                     if v.nullable:
-                        logging.warning('NOTE: change primary key to non null')
+                        _log.warning('NOTE: change primary key to non null')
                         v.nullable = False
                     primary_key = v
                 mappings[k] = v
@@ -258,7 +260,6 @@ class Model(dict):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG)
     db.create_engine('wangyu', 'taotao', 'python_blog')
     db.update('drop table if exists user')
     db.update('create table user (id int primary key, name text,' +

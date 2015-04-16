@@ -4,19 +4,19 @@
 import logging
 import logging.config
 import json
-import pdb
+import os
 
 class Log(object):
 
     def __init__(self, name):
         try:
-            pdb.set_trace()
-            with open('/work/python-webapp/conf/logging.conf','rt') as f:
+            log_path = os.path.join(os.getcwd(), 'conf/logging.conf')
+            with open(log_path,'rt') as f:
                 conf_setting = json.load(f)
                 logging.config.dictConfig(conf_setting)
                 self._logger = logging.getLogger(name)
         except BaseException, e:
-            print 'init logging failed, err: %s' % e
+            print 'init logging failed, err: %s' % str(e)
 
     def info(self, message):
         self._logger.info(message)

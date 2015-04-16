@@ -5,8 +5,9 @@ import time
 import uuid
 import functools
 import threading
-import logging
+from www.log import Log
 
+_log = Log(__name__)
 
 class Dict(dict):
     '''
@@ -63,9 +64,9 @@ def next_id(t=None):
 def _profiling(start, sql=''):
     t = time.time() - start
     if t > 0.1:
-        logging.warning('[PROFILING] [DB] %s: %s' % (t, sql))
+        _log.warning('[PROFILING] [DB] %s: %s' % (t, sql))
     else:
-        logging.info('[PROFILING] [DB] %s: %s' % (t, sql))
+        _log.info('[PROFILING] [DB] %s: %s' % (t, sql))
 
 
 class DBError(Exception):
@@ -83,7 +84,7 @@ class _LasyConnection(object):
     def cursor(self):
         if self.connection is None:
             connection = engine.connect()
-            logging.info('open connection <%s>...' % hex(id(connection)))
+            _log.info('open connection <%s>...' % hex(id(connection)))
             self.connection = connection
         return self.connection.cursor()
 
@@ -97,7 +98,7 @@ class _LasyConnection(object):
         if self.connection:
             connection = self.connection
             self.connection = None
-            logging.info('close connection <%s> ...' % hex(id(connection)))
+            _log.info('close connection <%s> ...' % hex(id(connection)))
             connection.close()
 
 
@@ -114,7 +115,7 @@ class _DbCtx(threading.local):
         return self.connection is not None
 
     def init(self):
-        logging.info('open lazy connection...')
+        _log.info('open lazy connection...')
         self.connection = _LasyConnection()
         self.transactions = 0
 
@@ -154,7 +155,7 @@ def create_engine(user, password, database, host='127.0.0.1', port=3306, **kw):
     params.update(kw)
     params['buffered'] = True
     engine = _Engine(lambda: mysql.connector.connect(**params))
-    logging.info('Init mysql engine <%s> ok.' % hex(id(engine)))
+    _log.info('Init mysql engine <%s> ok.' % hex(id(engine)))
 
 
 class _ConnectionCtx(object):
@@ -203,7 +204,7 @@ class _TransacationCtx(object):
             _db_ctx.init()
             self.should_close_conn = True
         _db_ctx.transactions = _db_ctx.transactions + 1
-        logging.info('begin transaction...' if _db_ctx.transactions == 1 else
+        _log.info('begin transaction...' if _db_ctx.transactions == 1 else
                      'join current transaction...')
         return self
 
@@ -222,21 +223,21 @@ class _TransacationCtx(object):
 
     def commit(self):
         global _db_ctx
-        logging.info('commit transactions...')
+        _log.info('commit transactions...')
         try:
             _db_ctx.connection.commit()
-            logging.info('commit ok.')
+            _log.info('commit ok.')
         except:
-            logging.warning('commit failed try rollback...')
+            _log.warning('commit failed try rollback...')
             _db_ctx.connection.rollback()
-            logging.info('rollback ok.')
+            _log.info('rollback ok.')
             raise
 
     def rollback(self):
         global _db_ctx
-        logging.warning('rollback transaction...')
+        _log.warning('rollback transaction...')
         _db_ctx.connection.rollback()
-        logging.info('rollback ok')
+        _log.info('rollback ok')
 
 def transaction():
     '''
@@ -257,7 +258,7 @@ def _select(sql, first, *args):
     global _db_ctx
     cursor = None
     sql = sql.replace('?', '%s')
-    logging.info('SQL: %s, ARGS: %s' % (sql, args))
+    _log.info('SQL: %s, ARGS: %s' % (sql, args))
     try:
         cursor = _db_ctx.connection.cursor()
         cursor.execute(sql, args)
@@ -293,13 +294,13 @@ def _update(sql, *args):
     global _db_ctx
     cursor = None
     sql = sql.replace('?', '%s')
-    logging.info('SQL: %s, ARGS: %s' % (sql, args))
+    _log.info('SQL: %s, ARGS: %s' % (sql, args))
     try:
         cursor = _db_ctx.connection.cursor()
         cursor.execute(sql, args)
         r = cursor.rowcount
         if _db_ctx.transactions == 0:
-            logging.info('auto commit')
+            _log.info('auto commit')
             _db_ctx.connection.commit()
         return r
     finally:
@@ -315,7 +316,7 @@ def update(sql, *args):
     return _update(sql, *args)
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG)
+    _log.basicConfig(level=logging.DEBUG)
     create_engine('wangyu', 'taotao', 'python_blog')
     update('drop table if exists user')
     update('create table user (id int primary key, name text, email text, passwd text, last_modified real)')
