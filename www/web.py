@@ -313,7 +313,7 @@ def _build_regx(path):
                     s += '\\' + ch
             re_list.append(s)
         is_var = not is_var
-     re_list.append('$')
+    re_list.append('$')
     return ''.join(re_list)
 
 class Route(object):
@@ -402,7 +402,7 @@ class Request(object):
         fs = cgi.FieldStorage(fp=self._environ['wsgi.input'],
                               environ=self._environ, keep_blank_values=True)
         inpputs = dict()
-        fow key in fs:
+        for key in fs:
             inputs[key] = _convert(fs[key])
         return inputs
 
@@ -487,6 +487,156 @@ class Request(object):
             self._headers = hdrs
         return self._headers
 
+        @property
+        def headers(self):
+            return dict(**self._get_headers)
 
+        def header(self, header, default=None):
+            return self._get_headers().get(header.upper(), default)
 
+        def _get_cookies(self):
+            if not hasattr(self, '_cookies'):
+                cookies = {}
+                cookie_str = self._environ.get('HTTP_COOKIE')
+                if cookie_str:
+                    for c in cookie_str.split(';'):
+                        pos = c.find('=')
+                        if pos > 0:
+                            cookies[c[:pos].strip()] = _unquote(c[pos+1:])
+                self._cookies = cookies
+            return self._cookies
 
+        @property
+        def cookies(self):
+            return Dict(**self._get_cookies())
+
+UTC_0 = UTC('+00:00')
+
+class Response(object):
+
+    def __init__(self):
+        self._status = '200 OK'
+        self._headers = {'CONTENT_TYPE': 'text/html; charset=utf-8'}
+
+    @property
+    def headers(self):
+        '''
+        Return response headers as [(key1,value1),(key2,value2)......] including cookies
+        '''
+        L = [(_RESPONSE_HEADER_DICT.get(k,k), v) for k,v in self._headers.iteritems()]
+        if hasattr(self, '_cookies'):
+            for v in self._cookies.itervalues():
+                L.append(('Set-Cookie',v))
+        L.append(_HEADER_X_POWERED_BY)
+        return L
+
+    def header(self, name):
+        key = name.upper()
+        if not key in _RESPONSE_HEADER_DICT:
+            key = name
+        return self._headers.get(key)
+
+    def unset_header(self, name):
+        '''
+        Unset header by name
+        '''
+        key = name.upper()
+        if no key in _RESPONSE_HEADER_DICT:
+            key = name
+        if key in self._headers:
+            del self._headers[key]
+
+    def set_header(self, name, value):
+        key = name.upper()
+        if not key in _RESPONSE_HEADER_DICT:
+            key = name
+        self._headers[key] = _to_str(value)
+
+    @property
+    def content_type(self):
+        return self.header('CONTENT-TYPE')
+
+    @content_type_setter
+    def content_type(self, value):
+        if value:
+            self.set_header('CONTENT-TYPE', value)
+        else:
+            self.unset_header('CONTENT-TYPE')
+
+    @property
+    def content_length(self):
+        return self.header('CONTENT-LENGTH')
+
+    @content_length_setter
+    def content_length(self, value):
+        self.set_header('CONTENT-LENGTH', str(value))
+
+    def delete_cookie(self, name):
+        self.set_cookie(name, '__deleted__', expires=0)
+
+    def set_cookie(self, name, value, max_age=None, expires=None, path='/', domain=None, secure=False, http_only=True):
+        '''
+        Set a cookie
+        Args:
+            name: the cookie name
+            value: the cookie value
+            max_age: optional, seconds of cookie's max age
+            expires: optional, unix timestamp, datetime or data object that indicate an absolute time of the
+                            expiration time of cookie. Note that if the expires specified, the max_age will be ignored.
+            path: the cookie path.
+            domain: the cookie domain
+            secure: if the cookie secure.
+            http_only: if the cookie for http only, default to Ture for better safty
+        '''
+        if not hasattr(self, '_cookies'):
+            self._cookies = {}
+        L = ['%s=%s' % (_quote(name), _quote(value))]
+        if expires is not None:
+            if isinstance(expires, (float, int, long)):
+                L.append('Expires=%s' % datetime.datetime.fromtimestamp(expires, UTC_0).strftime('%a, %d-%b-%Y %H:%M:%S GMT'))
+            if isinstance(expires, (datetime.date, datetime.datetime)):
+                L.append('Expires=%s' % expires.astimezone(UTC_0).strftime('%a, %d-%b-%Y %H:%M:%S GMT'))
+        elif isinstance(max_age, (int,long)):
+            L.append('Max-Age=%d' % max_age)
+        L.append('Path=%s' % path)
+        if domain:
+            L.append('Domain=%s' % domain)
+        if secure:
+            L.append('Secure')
+        if http_only:
+            L.append('HttpOnly')
+        self._cookies[name] = ';'.join(L)
+
+    def unset_cookie(self, name):
+        if hasattr(self, '_cookies'):
+            if name in self._cookies:
+                del self._cookies[name]
+
+    @property
+    def status_code(self):
+        return int(self._status[:3])
+
+    @property
+    def status(self):
+        return self._status
+
+    @status.setter
+    def status(self, value):
+        if isinstance(value, (int,long)):
+            if value >=100 and value <=999:
+                st = _RESPONSE_HEADERS.get(value, '')
+                if st:
+                    self._status = '%d %s' % (value, st)
+                else:
+                    self._status = str(value)
+            else:
+                raise ValueError('Bad response code %d' % value)
+            elif isinstance(value, basestring):
+                if isinstance(value, unicode):
+                    value = value.encode('utf-8')
+                if _RE_RESPONSE_STATUS.match(value):
+                    self._status = value
+                else:
+                    raise ValueError('Bad reponse code %s' % value)
+            else:
+                raise TypeError('Bad type of response code.')
