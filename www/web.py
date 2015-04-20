@@ -271,18 +271,221 @@ def get(path):
     '''
     def _decorator(func):
         func.__web_route_ = path
-        func.__web_method = 'GET'
+        func.__web_method_ = 'GET'
         return func
     return _decorator
 
 def post(path):
     def _decorator(func):
-        func.__web_route = path
-        func.__web_method = 'POST'
+        func.__web_route_ = path
+        func.__web_method_ = 'POST'
         return func
     return _decorator
 
-_re_route = re.compile(r'')
+_re_route = re.compile(r'(\:[a-zA-Z_]\w*)')
+
+def _build_regx(path):
+    '''
+    Convert route path to regex.
+
+    >>> _build_regx('/path/to/:file')
+    '^\\/path\\/to\\/(?P<file>[^\\/]+)$'
+    '''
+
+    re_list = ['^']
+    var_list = []
+    is_var = False
+    for v in _re_route.split(path):
+        if is_var:
+            var_name = v[1:]
+            var_list.append(var_name)
+            re_list.append(r'?P<%s>[^\/]+' % var_name)
+        else:
+            s = ''
+            for ch in v:
+                if ch >= '0' and ch <= '9':
+                    s += ch
+                elif ch >= 'a' and ch <= 'z':
+                    s += ch
+                elif ch >= 'A' and ch <='Z':
+                    s += ch
+                else:
+                    s += '\\' + ch
+            re_list.append(s)
+        is_var = not is_var
+     re_list.append('$')
+    return ''.join(re_list)
+
+class Route(object):
+    '''
+    A Route object is a callable object
+    '''
+
+    def __init__(self, func):
+        self.path = func.__web_route_
+        self.method = func.__web_method_
+        self._is_static = _re_route.search(self.path) is None
+        if not self._is_static:
+            self.route = re.compile(_build_regx(self.path))
+        self.func = func
+
+    def match(self, url):
+        m = self.route.match(url)
+        if m:
+            return m.groups()
+        return None
+
+    def __call__(self, *args):
+        return self.func(*args)
+
+    def __str__(self):
+        if self._is_static:
+            return 'Route(static,%s,path=%s)' % (self.method, self.path)
+        return 'Route(dynamic,%s,path=%s)' % (self.method, self.path)
+
+    __repr__ = __str__
+
+
+def _static_file_generator(fpath):
+    BLOCK_SIZE = 8192
+    with open(fpath, 'rb') as f:
+        block = f.read(BLOCK_SIZE)
+        while block:
+            yield block
+            block = f.read(BLOCK_SIZE)
+
+class StaticFileRoute(object):
+    def __init__(self):
+        self.method = 'GET'
+        self.is_static = False
+        self.route = re.compile('^/static/(.+)$')
+
+    def match(self, url):
+        if url.startswith('/static/'):
+            return (url[1:],)
+        return None
+
+    def __call__(self,*args):
+        fpath = os.path.join(ctx.application.document_root, args[0])
+        if not os.path.isfile(fpath):
+            raise notfound()
+        fext = os.path.splitext(fpath)[1]
+        ctx.response.content_type = mimetypes.types_map.get(fext.lower(),
+                                                'appliaction/object-stream')
+        return _static_file_generator(fpath)
+
+class MultipartFile(object):
+    '''
+    Multipart file storage get from request input.
+    '''
+
+    def __init__(self, storage):
+        self.filename = _to_unicode(storage.filename)
+        self.file = storage.file
+
+
+class Request(object):
+    '''
+    Request object for obtaining all http request information.
+    '''
+
+    def __init__(self, environ):
+        self._environ = environ
+
+    def _parse_input(self):
+        def _convert(item):
+            if isinstance(item, list):
+                return [_to_unicode(i.value) for i in item]
+            if item.filename:
+                return MultipartFile(item)
+            return _to_unicode(item.value)
+        fs = cgi.FieldStorage(fp=self._environ['wsgi.input'],
+                              environ=self._environ, keep_blank_values=True)
+        inpputs = dict()
+        fow key in fs:
+            inputs[key] = _convert(fs[key])
+        return inputs
+
+    def _get_raw_input(self):
+        if not hasattr(self, '_raw_input'):
+            self._raw_input = _parse_input()
+        return self._raw_input
+
+    def __getitem__(self, key):
+        r = _get_raw_input()[key]
+        if isinstance(r, list):
+            return r[0]
+        return r
+
+    def get(self, key, default=None):
+        r = self._get_raw_input().get(key, default)
+        if isinstance(r, list):
+            return r[0]
+        return r
+
+    def gets(self, key):
+        r = self._get_raw_input()[key]
+        if isinstance(r, list):
+            return r[:]
+        return [r]
+
+    def input(self, **kw):
+        '''
+        Get input as dict from request, fill dict using provided default value
+        if key is not exist
+        '''
+        copy = Dict(**kw)
+        raw = self._get_raw_input()
+        for k,v in raq.iteritems:
+            copy[k] = v[0] if isinstance(v, list) else v
+        return copy
+
+    def get_body(self):
+        '''
+        Get raw data from HTTP POST and return as str.
+        '''
+        fp = self._environ['wsgi.input']
+        return fp.read()
+
+    @property
+    def remote_addr(self):
+        '''
+        Get remote addr, return '0.0.0.0' if cannot get remote_addr
+        '''
+        return self._environ['REMOTE_ADDR', '0.0.0.0']
+
+    @property
+    def document_root(self):
+        return self._environ['DOCUMENT_ROOT', '']
+
+    @property
+    def query_string(self):
+        return self._environ('QUERY_STRING', '')
+
+    @property
+    def environ(self):
+        return self._environ
+
+    @property
+    def request_method(self):
+        return self._environ('REQUEST_METHOD')
+
+    @property
+    def path_info(self):
+        return urllib.unquote(self._environ('PATH_INFO', ''))
+
+    @property
+    def host(self):
+        return self._environ('HTTP_HOST', '')
+
+    def _get_headers(self):
+        if not hasattr(self, '_headers'):
+            hdrs = {}
+            for k,v in self._environ.iteritems:
+                if k.startswith('HTTP_'):
+                    hdrs[k[5:].replace('_','-').upper()] = v.decode('utf-8')
+            self._headers = hdrs
+        return self._headers
 
 
 
