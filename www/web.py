@@ -722,4 +722,79 @@ def _build_interceptor_chain(last_fn, *interceptors):
         fn = _build_interceptor_fn(f, fn)
     return fn
 
+def _load_module(module_name):
+    last_dot = module_name.rfind('.')
+    if last_dot == (-1):
+        return __import__(module_name, globals(), locals())
+    from_module = module_name[:last_dot]
+    import_module = module_name[last_dot+1:]
+    m = __import__(from_module, globals(), locals(), [import_module])
+    return getattr(m, import_module)
 
+class WSGIApplication(object):
+    def __init__(self, document_root=None, **kw):
+        self._running = False
+        self._document_root = document_root
+        self._interceptors = []
+        self._template_engine = None
+        self._get_static = {}
+        self._post_static = {}
+        self._get_dynamic = []
+        self._post_dynamic = []
+
+    def _check_not_running(self):
+        if self._running:
+            raise RuntimeError('Cannot modify when WSGIApplication running.')
+
+    @property
+    def template_engine(self):
+        return self._template_engine
+
+    @template_engine.setter
+    def template_engine(self, engine):
+        self._check_not_running()
+        self._template_engine = engine
+
+    def add_module(self, mod):
+        self._check_not_running()
+        m = mod if type(mod) == types.ModuleType else _load_module(mod)
+        _log.info('Add module: %s' % m.__name__)
+        for name in dir(m):
+            fn = getattr(m, name)
+            if callable(fn) and hasattr(fn, '__web_route_') and
+            hasattr(fn, '__web_method_'):
+                self.add_url(fn)
+
+    def add_url(self, func):
+        self._check_not_running()
+        route = Route(func)
+        if route.is_static:
+            if route.method == 'GET':
+                self._get_static[route.path] = route
+            if route.method == 'POST':
+                self._post_static[route.path] = route
+        else:
+            if route.method == 'GET':
+                self._get_dynamic.append(route)
+            if route.method == 'POST':
+                self._post_dynamic.append(route)
+        _log.info('Add route: %s' % str(route))
+
+    def add_interceptor(self, func):
+        self._check_not_running()
+        self._interceptors.append(func)
+        _log.info('Add interceptor: %s' % str(func))
+
+    def run(self, port=9000, host='127.0.0.1'):
+        from wsgiref.simple_server import make_server
+        _log.info('application (%s) will start at %s:%s...' %
+                  (self._document_root, host, port))
+        server = make_server(host, port, self.get_wsgi_application(debug=True))
+        server.serve_forever()
+
+    def get_wsgi_application(self, debug=False):
+        self._check_not_running()
+        if debug:
+            self._get_dynamic.append(StaticFileRoute())
+        self._running = True
+        _application = Dict(document_root=self._document_root)
